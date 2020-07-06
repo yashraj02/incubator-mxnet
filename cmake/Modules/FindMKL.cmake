@@ -31,8 +31,6 @@
 #   MKL_INCLUDE_DIR      : unclude directory
 #   MKL_LIBRARIES        : the libraries to link against.
 #
-# cjolivier01: Changed to also look for MKLDNN library (subset of mkl) instead of standard MKL package
-#
 
 if(MKL_FOUND)
   return()
@@ -64,9 +62,9 @@ set(INTEL_ROOT "/opt/intel" CACHE PATH "Folder contains intel libs")
 
   # ---[ Find libraries
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(__path_suffixes lib lib/ia32)
+    set(__path_suffixes lib lib/ia32 linux/lib linux/lib/ia32)
   else()
-    set(__path_suffixes lib lib/intel64)
+    set(__path_suffixes lib lib/intel64 linux/lib linux/lib/intel64)
   endif()
 
   set(__mkl_libs "")
@@ -138,9 +136,14 @@ set(INTEL_ROOT "/opt/intel" CACHE PATH "Folder contains intel libs")
       list(APPEND __looked_for INTEL_INCLUDE_DIR)
     endif()
 
+    # Search with NO_DEFAULT_PATH to prefer Intel iomp5.so over OS provided iomp5.so symlink to gnu omp
     find_library(IOMP_LIBRARY ${__iomp5_libs}
-      PATHS ${INTEL_RTL_ROOT} ${INTEL_ROOT}/compiler ${MKL_ROOT}/.. ${MKL_ROOT}/../compiler
+      PATHS ${INTEL_RTL_ROOT} ${INTEL_ROOT}/compilers_and_libraries ${INTEL_ROOT}/compiler ${MKL_ROOT}/.. ${MKL_ROOT}/../compilers_and_libraries ${MKL_ROOT}/../compiler
       PATH_SUFFIXES ${__path_suffixes}
+      NO_DEFAULT_PATH
+      DOC "Path to Path to OpenMP runtime library")
+    # Search without NO_DEFAULT_PATH in case that iomp5.so couldn't be found at the PATHS specified in the previous find_library invocation
+    find_library(IOMP_LIBRARY ${__iomp5_libs}
       DOC "Path to Path to OpenMP runtime library")
 
     list(APPEND __looked_for IOMP_LIBRARY)
