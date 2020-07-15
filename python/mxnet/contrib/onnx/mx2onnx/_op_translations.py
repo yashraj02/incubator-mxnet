@@ -923,6 +923,26 @@ def convert_softmax(node, **kwargs):
     return [softmax_node]
 
 
+@mx_op.register("SoftmaxActivation")
+def convert_softmax_activation(node, **kwargs):
+    """Map MXNet's softmax operator attributes to onnx's Softmax operator
+    and return the created node.
+    """
+    name, input_nodes, attrs = get_inputs(node, kwargs)
+
+    m = int(attrs.get("mode", -1))
+
+    softmax_activation_node = onnx.helper.make_node(
+        "SoftmaxActivation",
+        input_nodes,
+        [name],
+        mode=m,
+        name=name
+    )
+
+    return [softmax_activation_node]
+
+
 @mx_op.register("BlockGrad")
 def convert_blockgrad(node, **kwargs):
     """ Skip operator  """
